@@ -10,14 +10,14 @@
 
   <groupId>org.hspconsortium.reference</groupId>
   <artifactId>hspc-reference-api-mysql</artifactId>
-  <version>0.9</version>
+  <version>0.10-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <scm>
     <connection>scm:git:ssh://git@bitbucket.org/hspconsortium/reference-api-mysql.git</connection>
     <developerConnection>scm:git:ssh://git@bitbucket.org/hspconsortium/reference-api-mysql.git</developerConnection>
     <url>https://bitbucket.org/hspconsortium/reference-api-mysql.git</url>
-    <tag>hspc-reference-api-mysql-0.9</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
