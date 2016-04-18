@@ -18,10 +18,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -71,15 +73,29 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
         return retVal;
     }
 
+    @Primary
     @Bean(name = {"dataSource", "defaultDataSource"})
-//    @ConfigurationProperties(prefix = "hspc.platform.api.fhir.db")
     public DataSource dataSource() {
+        DataSourceProperties db = multitenancyProperties.getDb();
         DataSourceBuilder factory = DataSourceBuilder
-                .create(this.multitenancyProperties.getDb().getClassLoader())
-                .driverClassName(this.multitenancyProperties.getDb().getDriverClassName())
-                .username(this.multitenancyProperties.getDb().getUsername())
-                .password(this.multitenancyProperties.getDb().getPassword())
-                .url(this.multitenancyProperties.getDb().getUrl());
+                .create(db.getClassLoader())
+                .driverClassName(db.getDriverClassName())
+                .username(db.getUsername())
+                .password(db.getPassword())
+                .url(db.getUrl());
+        return factory.build();
+    }
+
+    @Bean(name = {"noSchemaDataSource"})
+    public DataSource noSchemaDataSource() {
+        DataSourceProperties db = multitenancyProperties.getDb();
+        String urlNoSchema = db.getUrl().substring(0, db.getUrl().indexOf(db.getSchema()));
+        DataSourceBuilder factory = DataSourceBuilder
+                .create(db.getClassLoader())
+                .driverClassName(db.getDriverClassName())
+                .username(db.getUsername())
+                .password(db.getPassword())
+                .url(urlNoSchema);
         return factory.build();
     }
 
