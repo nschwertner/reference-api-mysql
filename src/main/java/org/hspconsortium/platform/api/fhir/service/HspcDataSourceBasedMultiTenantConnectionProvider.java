@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,6 @@ import java.util.Map;
 @Component
 public class HspcDataSourceBasedMultiTenantConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(HspcDataSourceBasedMultiTenantConnectionProvider.class);
-    private static final String DEFAULT_TENANT_ID = "hspc";
     private Map<String, DataSource> tanentDataSourceMap;
 
     @Autowired
@@ -30,12 +30,12 @@ public class HspcDataSourceBasedMultiTenantConnectionProvider extends AbstractDa
     @PostConstruct
     public void load() {
         tanentDataSourceMap = new HashMap<>();
-        tanentDataSourceMap.put("hspc", defaultDataSource);
+        tanentDataSourceMap.put(MultiTenantProperties.DEFAULT_TENANT_ID, defaultDataSource);
     }
 
     @Override
     protected DataSource selectAnyDataSource() {
-        return tanentDataSourceMap.get(DEFAULT_TENANT_ID);
+        return tanentDataSourceMap.get(MultiTenantProperties.DEFAULT_TENANT_ID);
     }
 
     @Override
@@ -43,12 +43,14 @@ public class HspcDataSourceBasedMultiTenantConnectionProvider extends AbstractDa
         DataSource dataSource = tanentDataSourceMap.get(tenantIdentifier);
         if (dataSource == null) {
             dataSource = createDataSource(tenantIdentifier);
-            if (dataSource != null)
+            if (dataSource != null) {
                 tanentDataSourceMap.put(tenantIdentifier, dataSource);
+                LOGGER.info(String.format("Tenant '%s' maps to '%s' database url out of %s active database url/s.", tenantIdentifier
+                        , ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().getUrl()
+                , tanentDataSourceMap.size()));
+            }
 
         }
-        LOGGER.info(String.format("Tenant '%s' is pointing to '%s' database url.", tenantIdentifier
-                , ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().getUrl()));
         return dataSource;
     }
 
@@ -61,13 +63,28 @@ public class HspcDataSourceBasedMultiTenantConnectionProvider extends AbstractDa
                 .password(dataSourceProperties.getPassword())
                 .url(dataSourceProperties.getUrl());
         DataSource dataSource = factory.build();
+        Connection conn = null;
         try {
-            dataSource.getConnection().prepareCall(dataSourceProperties.getData()).execute();
+            //verify for a valid datasource
+            conn = dataSource.getConnection();
+            conn.close(); // Return to connection pool
+            conn = null;  // Make sure we don't close it twice
+
         } catch (SQLException e) {
-            LOGGER.warn(String.format("Connection couldn't be established for tenant '%s' with '%s' database url."
+            LOGGER.error(String.format("Connection couldn't be established for tenant '%s' with '%s' database url."
                     , tenant
                     , dataSourceProperties.getUrl()));
             dataSource = null;
+        } finally {
+            // Always make sure result sets and statements are closed, and the connection is returned to the pool
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    ;
+                }
+                conn = null;
+            }
         }
         return dataSource;
     }
