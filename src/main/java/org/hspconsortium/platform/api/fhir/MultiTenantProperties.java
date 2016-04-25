@@ -1,5 +1,6 @@
 package org.hspconsortium.platform.api.fhir;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
@@ -8,6 +9,9 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 public class MultiTenantProperties {
 	public static final String DEFAULT_TENANT_ID = "hspc";
 	public static final String CURRENT_TENANT_IDENTIFIER = "current_tenant_identifier";
+
+	@Value("${hspc.platform.api.fhir.datasource.cache.size:10}")
+	private String dataSourceCachSize;
 
 	@NestedConfigurationProperty
 	private DataSourceProperties db;
@@ -18,6 +22,14 @@ public class MultiTenantProperties {
 
 	public void setDb(DataSourceProperties db) {
 		this.db = db;
+	}
+
+	public String getDataSourceCachSize() {
+		return dataSourceCachSize;
+	}
+
+	public void setDataSourceCachSize(String dataSourceCachSize) {
+		this.dataSourceCachSize = dataSourceCachSize;
 	}
 
 	public DataSourceProperties getDataSource(String tenant) {

@@ -6,12 +6,17 @@ import ca.uhn.fhir.jpa.util.SubscriptionsRequireManualActivationInterceptorDstu2
 import ca.uhn.fhir.rest.server.interceptor.IServerInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +26,10 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.guava.GuavaCache;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -31,14 +40,18 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+import java.util.Arrays;
 import java.util.Properties;
 
 @Configuration
+@EnableCaching
 @EnableTransactionManagement()
 @PropertySource("classpath:/config/mysql.properties")
 @EnableConfigurationProperties({JpaProperties.class, MultiTenantProperties.class})
-@EnableAutoConfiguration(exclude={DataSourceAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class})
 public class MySQLConfig extends BaseJavaConfigDstu2 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MySQLConfig.class);
+
     @Autowired
     private MultiTenantProperties multitenancyProperties;
 
@@ -166,6 +179,30 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
         JpaTransactionManager retVal = new JpaTransactionManager();
         retVal.setEntityManagerFactory(entityManagerFactory);
         return retVal;
+    }
+
+    @Bean
+    public CacheManager cacheManager() {
+        SimpleCacheManager cacheManager = new SimpleCacheManager();
+
+        RemovalListener removalListener = new RemovalListener<String, DataSource>() {
+            @Override
+            public void onRemoval(RemovalNotification<String, DataSource> notification) {
+                org.apache.tomcat.jdbc.pool.DataSource removedDataSource = (org.apache.tomcat.jdbc.pool.DataSource) notification.getValue();
+                LOGGER.info(String.format("Cached DataSource with '%s' url has been removed."
+                        , removedDataSource.getPoolProperties().getUrl()));
+                removedDataSource.close(true);
+            }
+        };
+
+        GuavaCache dataSourceCache = new GuavaCache("dataSource", CacheBuilder.newBuilder()
+                .maximumSize(Long.parseLong(this.multitenancyProperties.getDataSourceCachSize()))
+                .removalListener(removalListener)
+                .recordStats()
+                .build());
+
+        cacheManager.setCaches(Arrays.asList(dataSourceCache));
+        return cacheManager;
     }
 
 }
