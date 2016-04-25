@@ -45,21 +45,32 @@ public class DatabaseManager {
 
     public boolean createSchema(String schema) {
         LOGGER.info("Creating schema: " + schema);
+        Connection connection = null;
         try {
-            Connection connection = noSchemaDataSource.getConnection();
+            connection = noSchemaDataSource.getConnection();
             Statement statement = connection.createStatement();
             int result = statement.executeUpdate("CREATE DATABASE " + schema);
             LOGGER.info("Creating schema result: " + result);
             return true;
         } catch (SQLException e) {
             throw new RuntimeException("Error creating schema: " + schema, e);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                    connection = null;
+                }
+            } catch (SQLException e) {
+                LOGGER.error("Error closing connection", e);
+            }
         }
     }
 
     public boolean loadInitialDataset(String schema, Reader reader) {
         LOGGER.info("Loading Initial Dataset for: " + schema);
+        Connection connection = null;
         try {
-            Connection connection = noSchemaDataSource.getConnection();
+            connection = noSchemaDataSource.getConnection();
             Statement statement = connection.createStatement();
             statement.executeUpdate("USE " + schema);
             ScriptRunner scriptRunner = new ScriptRunner(connection, true, true, true);
@@ -67,6 +78,15 @@ public class DatabaseManager {
             return true;
         } catch (SQLException | IOException e) {
             throw new RuntimeException("Error loading initial dataset for schema: " + schema, e);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                    connection = null;
+                }
+            } catch (SQLException e) {
+                LOGGER.error("Error closing connection", e);
+            }
         }
     }
 }

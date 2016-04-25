@@ -102,7 +102,7 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
     @Bean(name = {"noSchemaDataSource"})
     public DataSource noSchemaDataSource() {
         DataSourceProperties db = multitenancyProperties.getDb();
-        String urlNoSchema = db.getUrl().substring(0, db.getUrl().indexOf(db.getSchema()));
+        String urlNoSchema = db.getUrl().substring(0, db.getUrl().indexOf(db.getSchema().toLowerCase()));
         DataSourceBuilder factory = DataSourceBuilder
                 .create(db.getClassLoader())
                 .driverClassName(db.getDriverClassName())
