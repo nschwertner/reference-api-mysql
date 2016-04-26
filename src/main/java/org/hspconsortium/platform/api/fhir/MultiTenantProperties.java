@@ -11,7 +11,7 @@ public class MultiTenantProperties {
 	public static final String CURRENT_TENANT_IDENTIFIER = "current_tenant_identifier";
 
 	@Value("${hspc.platform.api.fhir.datasource.cache.size:10}")
-	private String dataSourceCachSize;
+	private String dataSourceCacheSize;
 
 	@NestedConfigurationProperty
 	private DataSourceProperties db;
@@ -24,12 +24,12 @@ public class MultiTenantProperties {
 		this.db = db;
 	}
 
-	public String getDataSourceCachSize() {
-		return dataSourceCachSize;
+	public String getDataSourceCacheSize() {
+		return dataSourceCacheSize;
 	}
 
-	public void setDataSourceCachSize(String dataSourceCachSize) {
-		this.dataSourceCachSize = dataSourceCachSize;
+	public void setDataSourceCacheSize(String dataSourceCacheSize) {
+		this.dataSourceCacheSize = dataSourceCacheSize;
 	}
 
 	public DataSourceProperties getDataSource(String tenant) {

@@ -196,7 +196,7 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
         };
 
         GuavaCache dataSourceCache = new GuavaCache("dataSource", CacheBuilder.newBuilder()
-                .maximumSize(Long.parseLong(this.multitenancyProperties.getDataSourceCachSize()))
+                .maximumSize(Long.parseLong(this.multitenancyProperties.getDataSourceCacheSize()))
                 .removalListener(removalListener)
                 .recordStats()
                 .build());
