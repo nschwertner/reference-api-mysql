@@ -26,6 +26,11 @@ public class HspcDataSourceRepository {
             LOGGER.info(String.format("Tenant '%s' maps to '%s' database url.", tenantIdentifier
                     , ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().getUrl()));
         }
+
+        if (dataSource instanceof org.apache.tomcat.jdbc.pool.DataSource) {
+            ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().setTestOnBorrow(true);
+            ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().setValidationQuery("SELECT 1");
+        }
         return dataSource;
     }
 

@@ -96,7 +96,13 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
                 .username(db.getUsername())
                 .password(db.getPassword())
                 .url(db.getUrl());
-        return factory.build();
+        DataSource dataSource =  factory.build();
+
+        if (dataSource instanceof org.apache.tomcat.jdbc.pool.DataSource) {
+            ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().setTestOnBorrow(true);
+            ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().setValidationQuery("SELECT 1");
+        }
+        return dataSource;
     }
 
     @Bean(name = {"noSchemaDataSource"})
@@ -109,7 +115,13 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
                 .username(db.getUsername())
                 .password(db.getPassword())
                 .url(urlNoSchema);
-        return factory.build();
+        DataSource dataSource =  factory.build();
+
+        if (dataSource instanceof org.apache.tomcat.jdbc.pool.DataSource) {
+            ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().setTestOnBorrow(true);
+            ((org.apache.tomcat.jdbc.pool.DataSource) dataSource).getPoolProperties().setValidationQuery("SELECT 1");
+        }
+        return dataSource;
     }
 
     @Bean()
