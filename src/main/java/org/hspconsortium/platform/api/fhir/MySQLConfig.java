@@ -62,9 +62,6 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
     private String luceneBase;
 
     @Autowired
-    private DataSource dataSource;
-
-    @Autowired
     private JpaProperties jpaProperties;
 
     @Autowired
@@ -124,18 +121,20 @@ public class MySQLConfig extends BaseJavaConfigDstu2 {
         return dataSource;
     }
 
-    @Bean()
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+    @Bean
+    @Autowired
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean retVal = new LocalContainerEntityManagerFactoryBean();
         retVal.setDataSource(dataSource);
         retVal.setPackagesToScan("ca.uhn.fhir.jpa.entity");
         retVal.setPersistenceProvider(new HibernatePersistenceProvider());
-        retVal.setJpaProperties(jpaProperties());
+        retVal.setJpaProperties(jpaProperties(dataSource));
         retVal.afterPropertiesSet();
         return retVal;
     }
 
-    private Properties jpaProperties() {
+    @Autowired
+    private Properties jpaProperties(DataSource dataSource) {
         Properties hibernateProps = new Properties();
         hibernateProps.putAll(jpaProperties.getHibernateProperties(dataSource));
         hibernateProps.put(Environment.SHOW_SQL, "false");
