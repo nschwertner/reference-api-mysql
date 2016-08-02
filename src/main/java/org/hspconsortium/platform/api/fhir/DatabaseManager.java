@@ -89,4 +89,26 @@ public class DatabaseManager {
             }
         }
     }
+
+    public boolean dropSchema(String schema) {
+        LOGGER.info("Dropping schema: " + schema);
+        Connection connection = null;
+        try {
+            connection = noSchemaDataSource.getConnection();
+            Statement statement = connection.createStatement();
+            statement.execute("DROP DATABASE " + schema);
+            return true;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error dropping schema: " + schema, e);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                    connection = null;
+                }
+            } catch (SQLException e) {
+                LOGGER.error("Error closing connection", e);
+            }
+        }
+    }
 }
