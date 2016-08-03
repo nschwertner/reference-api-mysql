@@ -27,13 +27,13 @@ public class DatabaseManager {
     @Autowired
     private DataSource noSchemaDataSource;
 
-    public Collection<String> getSchemas() {
+    public Collection<String> getSchemas(String schemaPrefix) {
         Collection<String> results = new ArrayList<>();
 
         try {
             Connection connection = noSchemaDataSource.getConnection();
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SHOW DATABASES");
+            ResultSet resultSet = statement.executeQuery(String.format("SHOW DATABASES LIKE '%s_%s'", schemaPrefix, "%"));
             while (resultSet.next()) {
                 results.add(resultSet.getString(1));
             }
