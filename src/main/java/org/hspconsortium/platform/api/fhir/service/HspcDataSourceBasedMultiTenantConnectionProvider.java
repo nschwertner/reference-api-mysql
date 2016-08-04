@@ -27,13 +27,14 @@ public class HspcDataSourceBasedMultiTenantConnectionProvider extends AbstractDa
 
     @Override
     protected DataSource selectAnyDataSource() {
-        return this.defaultDataSource;
+        return defaultDataSource;
     }
 
     @Override
     protected DataSource selectDataSource(String tenantIdentifier) {
         if ((tenantIdentifier == null) || (MultiTenantProperties.DEFAULT_TENANT_ID.equals(tenantIdentifier))) {
-            return this.defaultDataSource;
+//            return this.defaultDataSource;
+            return hspcDataSourceRepository.getDataSource(MultiTenantProperties.DEFAULT_TENANT_SANDBOX_ID);
         }
         return hspcDataSourceRepository.getDataSource(tenantIdentifier);
     }

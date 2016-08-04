@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 @ConfigurationProperties("hspc.platform.api.fhir")
 public class MultiTenantProperties {
 	public static final String DEFAULT_TENANT_ID = "hspc";
+	public static final String DEFAULT_TENANT_SANDBOX_ID = "pu";
 	public static final String CURRENT_TENANT_IDENTIFIER = "current_tenant_identifier";
 
 	@Value("${hspc.platform.api.fhir.datasource.cache.size:10}")
