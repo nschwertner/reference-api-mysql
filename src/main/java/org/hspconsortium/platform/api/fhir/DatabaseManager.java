@@ -96,7 +96,7 @@ public class DatabaseManager {
         try {
             connection = noSchemaDataSource.getConnection();
             Statement statement = connection.createStatement();
-            statement.execute("DROP DATABASE " + schema);
+            statement.execute("DROP DATABASE IF EXISTS " + schema);
             return true;
         } catch (SQLException e) {
             throw new RuntimeException("Error dropping schema: " + schema, e);
